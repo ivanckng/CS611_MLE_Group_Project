@@ -7,5 +7,5 @@ scipy==1.15.1
 scikit-learn==1.6.1
 fsspec==2025.5.1
 gcsfs==2025.5.1
-# xgboost==3.0.2
-# pyspark==3.5.5
+xgboost==3.0.2
+pyspark==3.5.5

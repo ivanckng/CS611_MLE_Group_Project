@@ -22,20 +22,20 @@ ENV PATH=$PATH:$JAVA_HOME/bin
 # Set the working directory
 WORKDIR /app
 
-# Create a new user 'jovyan' (a common convention) and give it ownership of the app directory
-RUN useradd -m -s /bin/bash -u 1000 jovyan && \
-    chown -R jovyan:jovyan /app
+# Create a new user 'group9' and give it ownership of the app directory
+RUN useradd -m -s /bin/bash -u 61109 group9 && \
+    chown -R group9:group9 /app
 
 # Copy the requirements file into the container
-COPY --chown=jovyan:jovyan requirements.txt ./
+COPY --chown=group9:group9 requirements.txt ./
 
 # Install Python dependencies (ensure that pyspark is in your requirements.txt,
 # or you can install it explicitly by uncommenting the next line)
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY --chown=jovyan:jovyan . .
+COPY --chown=group9:group9 . .
 
-USER jovyan
+USER group9
 
 
 # Expose the default JupyterLab port
