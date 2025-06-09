@@ -4,6 +4,8 @@ Google Group: CS611_MLE_Group_9 (if you have not joined the group, please contac
 
 PLEASE FOLLOW THE STEPS BEFORE DOING ANYTHING!!!!!!!!!
 
+
+##### IF RUNNING IN YOUR LOCAL MACHINE, PLEASE FOLLOW THE FOLLOWING STEPS #####
 1. Install Google Cloud CLI
     https://cloud.google.com/sdk/docs/install
 2. Run the following code in local terminal to get authentication 
