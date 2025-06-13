@@ -9,3 +9,4 @@ fsspec==2025.5.1
 gcsfs==2025.5.1
 xgboost==3.0.2
 pyspark==3.5.5
+tqdm==4.67.1
