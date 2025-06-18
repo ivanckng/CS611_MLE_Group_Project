@@ -59,11 +59,19 @@ def process_gold_featurestore(date_str, bucket_name, actual_silver_transaction_d
     )
 
     # account age
-
     df_joined = df_joined.withColumn(
         "account_age",
         datediff("membership_start_date", "registration_init_time")
     )
+
+    # drop not needed columns
+    df_joined = df_joined.drop('plan_list_price')
+    df_joined = df_joined.drop('actual_amount_paid')
+    df_joined = df_joined.drop('payment_plan_days')
+    df_joined = df_joined.drop('registration_init_time')
+    df_joined = df_joined.drop('registration_init_time')
+
+    # df_joined.show(5)
 
 
     partition_name = "gold_featurestore_" + date_str.replace('-','_') + '.parquet'

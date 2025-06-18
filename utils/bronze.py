@@ -18,7 +18,7 @@ from pyspark.sql.types import StringType, IntegerType, FloatType, DateType
 
 def process_bronze_member(bucket_name, bronze_member_directory, spark):
     # connect to source back end - IRL connect to back end source system
-    csv_file_path = f"gs://{bucket_name}/Bronze Layer/bronze_members.csv"
+    csv_file_path = f"gs://{bucket_name}/Bronze Layer/members_50k.csv"
 
     # load data - IRL ingest from back end source system
     df = spark.read.csv(csv_file_path, header=True, inferSchema=True)
@@ -50,7 +50,7 @@ def process_bronze_userlog(date_str, bucket_name, bronze_userlog_directory, spar
     end_date = datetime(year, month, last_day)
     
     # connect to source back end - IRL connect to back end source system
-    csv_file_path = f"gs://{bucket_name}/Bronze Layer/df_user_logs.csv"
+    csv_file_path = f"gs://{bucket_name}/Bronze Layer/user_logs_50k.csv"
 
     # load data - IRL ingest from back end source system
     df = spark.read.csv(csv_file_path, header=True, inferSchema=True)

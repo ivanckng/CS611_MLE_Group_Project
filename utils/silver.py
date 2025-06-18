@@ -29,7 +29,8 @@ def process_silver_table_member(bucket_name, bronze_member_directory, silver_mem
     df = spark.read.csv(filepath, header=True, inferSchema=True)
     print('loaded from:', filepath, 'row count:', df.count())
 
-    # Drop unnamed 0, invalid column
+    # Drop invalid column
+    df = df.drop('_c0')
     df = df.drop('Unnamed: 0')
     df = df.drop('bd') # lots of invalid data through EDA
     
@@ -78,6 +79,11 @@ def process_silver_table_transaction(date_str, bucket_name, bronze_transaction_d
     filepath = f"gs://{bucket_name}/{bronze_transaction_directory}/{partition_name}"
     df = spark.read.csv(filepath, header=True, inferSchema=True)
     print('loaded from:', filepath, 'row count:', df.count())
+
+    # drop invalid columns
+    df = df.drop('Unnamed: 0.1')
+
+    
 
 
     # clean data: enforce schema / data type
@@ -146,8 +152,16 @@ def process_silver_table_userlog(date_str, bucket_name, bronze_userlog_directory
         print(f"File {next_filepath} does not exist. Proceeding with single snapshot.")
 
 
-    # Drop unnamed 0, invalid column
+    # Drop invalid column
+    df = df.drop('_c0')
     df = df.drop('Unnamed: 0')
+
+    # Define the bounds
+    lower_bound = -0.75 * 1e16
+    upper_bound = 0.75 * 1e16
+    
+    # Filter out invalid rows
+    df = df.filter((col("total_secs") >= lower_bound) & (col("total_secs") <= upper_bound))
 
 
     # clean data: enforce schema / data type
