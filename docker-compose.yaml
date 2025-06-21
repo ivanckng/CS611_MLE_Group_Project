@@ -9,3 +9,14 @@ services:
     environment:
       - JUPYTER_ENABLE_LAB=yes
     command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8890", "--no-browser", "--allow-root", "--notebook-dir=/app", "--ServerApp.token=''", "--ServerApp.disable_check_xsrf=True"]
+
+  api:
+    build: .
+    container_name: cs611_mle_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    # environment:
+    #   - MODEL_PATH=models/combined_model_artefact_20250619_043417.pkl
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

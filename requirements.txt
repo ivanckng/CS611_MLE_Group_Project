@@ -11,3 +11,9 @@ xgboost==3.0.2
 pyspark==3.5.5
 tqdm==4.67.1
 google-cloud-storage
+fastapi==0.110.2
+uvicorn[standard]==0.29.0
+joblib==1.4.2
+apache-airflow[celery,postgres,redis]==2.9.2
+psycopg2-binary
+flower

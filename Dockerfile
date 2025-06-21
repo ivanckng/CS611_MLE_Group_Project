@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y --no-install-recommends openjdk-17-jdk-headless procps bash && \
     rm -rf /var/lib/apt/lists/* && \
-    # Ensure Spark’s scripts run with bash instead of dash
+    # Ensure Spark's scripts run with bash instead of dash
     ln -sf /bin/bash /bin/sh 
 # && \
 # Create expected JAVA_HOME directory and symlink the java binary there
@@ -17,7 +17,7 @@ RUN apt-get update && \
 
 # Set JAVA_HOME to the directory expected by Spark
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-ENV PATH=$PATH:$JAVA_HOME/bin
+ENV PATH=$PATH:$JAVA_HOME/bin:/home/group9/.local/bin
 
 # Set the working directory
 WORKDIR /app
@@ -39,7 +39,8 @@ USER group9
 
 
 # Expose the default JupyterLab port
-EXPOSE 8890
+# EXPOSE 8890
+# EXPOSE 8000
 
-# Set up the command to run JupyterLab
-CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8890", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
+# # Set up the command to run JupyterLab
+# CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8890", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
