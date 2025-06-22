@@ -1,22 +1,97 @@
+# services:
+#   jupyter:
+#     build: .
+#     container_name: cs611_mle_group_project
+#     ports:
+#       - "8890:8890"
+#     volumes:
+#       - .:/app
+#     environment:
+#       - JUPYTER_ENABLE_LAB=yes
+#     command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8890", "--no-browser", "--allow-root", "--notebook-dir=/app", "--ServerApp.token=''", "--ServerApp.disable_check_xsrf=True"]
+
+#   api:
+#     build: .
+#     container_name: cs611_mle_api
+#     ports:
+#       - "8000:8000"
+#     volumes:
+#       - .:/app
+#     # environment:
+#     #   - MODEL_PATH=models/combined_model_artefact_20250619_043417.pkl
+#     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+
+
+
 services:
   jupyter:
     build: .
-    container_name: cs611_mle_group_project
     ports:
       - "8890:8890"
     volumes:
       - .:/app
     environment:
       - JUPYTER_ENABLE_LAB=yes
-    command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8890", "--no-browser", "--allow-root", "--notebook-dir=/app", "--ServerApp.token=''", "--ServerApp.disable_check_xsrf=True"]
+    entrypoint: []
+    command:
+      [
+        "jupyter",
+        "lab",
+        "--ip=0.0.0.0",
+        "--port=8890",
+        "--no-browser",
+        "--allow-root",
+        "--notebook-dir=/app",
+        "--ServerApp.token=''",
+        "--ServerApp.disable_check_xsrf=True"
+      ]
 
-  api:
+
+
+  airflow-init:
     build: .
-    container_name: cs611_mle_api
-    ports:
-      - "8000:8000"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__CORE__FERNET_KEY=PAqBeGJLJTYFzVkOGHWIYXdLO7XdXz5yTdxAGJe9ezM=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
     volumes:
-      - .:/app
-    # environment:
-    #   - MODEL_PATH=models/combined_model_artefact_20250619_043417.pkl
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+      - airflow_data:/opt/airflow
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/scripts
+    entrypoint: >
+      /bin/bash -c "airflow db init &&
+      airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true"
+
+  airflow-webserver:
+    build: .
+    depends_on:
+      - airflow-init
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__CORE__FERNET_KEY=PAqBeGJLJTYFzVkOGHWIYXdLO7XdXz5yTdxAGJe9ezM=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - airflow_data:/opt/airflow
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/scripts
+    ports:
+      - "8080:8080"
+    command: webserver
+
+  airflow-scheduler:
+    build: .
+    depends_on:
+      - airflow-init
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__CORE__FERNET_KEY=PAqBeGJLJTYFzVkOGHWIYXdLO7XdXz5yTdxAGJe9ezM=
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    volumes:
+      - airflow_data:/opt/airflow
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/scripts
+    command: scheduler
+
+volumes:
+  airflow_data:
