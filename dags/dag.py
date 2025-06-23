@@ -28,14 +28,29 @@ with DAG(
             'python3 data/dep_source_check.py'
         )
     )
+    
+    # ---- label store ----
+    bronze_label_store = DummyOperator(task_id="bronze_label_store")
+    silver_label_store = DummyOperator(task_id="silver_label_store")
+    gold_label_store = DummyOperator(task_id="gold_label_store")
+    label_store_completed = DummyOperator(task_id="label_store_completed")
 
-    bronze_transaction = BashOperator(
-        task_id="bronze_transaction",
+    # ---- feature store ----
+    bronze_member = BashOperator(
+        task_id="bronze_member",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/bronze_transaction.py'
-        )
+            'python3 data/bronze_member.py'
+        )    
     )
+    silver_member = BashOperator(
+        task_id="silver_member",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/silver_member.py'
+        )    
+    )
+
 
     bronze_userlog = BashOperator(
         task_id="bronze_userlog",
@@ -44,64 +59,100 @@ with DAG(
             'python3 data/bronze_userlog.py'
         )    
     )
-    bronze_member = BashOperator(
-        task_id="bronze_member",
-        bash_command=(
-            'cd /opt/airflow/scripts && '
-            'python3 data/bronze_member.py'
-        )    
-    )
-
-    silver_transaction = BashOperator(
-        task_id="silver_transaction",
-        bash_command=(
-            'cd /opt/airflow/scripts && '
-            'python3 data/silver_transaction.py'
-        )
-    )
-
     silver_userlog = DummyOperator(task_id="silver_userlog")
-    silver_member = DummyOperator(task_id="silver_member")
 
-    gold_label_store = BashOperator(
-        task_id="gold_label_store",
-        bash_command=(
-            'cd /opt/airflow/scripts && '
-            'python3 data/gold_label_store.py'
-        )
-    )
-
+    silver_transaction = DummyOperator(task_id="silver_transaction")
     gold_feature_store = DummyOperator(task_id="gold_feature_store")
-
-    label_store_completed = BashOperator(
-        task_id="label_store_completed",
-        bash_command=(
-            'cd /opt/airflow/scripts && '
-            'python3 data/label_store_completed.py'
-        )
-    )
-
     feature_store_completed = DummyOperator(task_id="feature_store_completed")
 
-    # Define task dependencies to run scripts sequentially
-    dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_label_store
+
+    # ---- label store ----
+    dep_check_source_data >> bronze_label_store >> silver_label_store >> gold_label_store >> label_store_completed
+
+    # ---- feature store ----
+    ### member
+    dep_check_source_data >> bronze_member >> silver_member >> gold_feature_store >> feature_store_completed
+
+    ### transaction
+    dep_check_source_data >> bronze_label_store >> silver_label_store >> silver_transaction >> gold_feature_store >> feature_store_completed
+
+    ### userlog
+    dep_check_source_data >> bronze_userlog >> silver_userlog >> gold_feature_store >> feature_store_completed
+    dep_check_source_data >> bronze_label_store >> silver_label_store >> silver_transaction >> silver_userlog >> gold_feature_store >> feature_store_completed
     
-    # Transaction for Feature Store
-    dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_feature_store
 
-    # Member for Feature Store
-    dep_check_source_data >> bronze_member >> silver_member >> gold_feature_store
+    
 
-    # User Log for Feature Store
-    dep_check_source_data >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store
-    dep_check_source_data >> bronze_userlog >> silver_userlog >> gold_feature_store
+    # bronze_transaction = BashOperator(
+    #     task_id="bronze_transaction",
+    #     bash_command=(
+    #         'cd /opt/airflow/scripts && '
+    #         'python3 data/bronze_transaction.py'
+    #     )
+    # )
 
-    gold_label_store >> label_store_completed
-    gold_feature_store >> feature_store_completed
+    
+
+    # silver_transaction = BashOperator(
+    #     task_id="silver_transaction",
+    #     bash_command=(
+    #         'cd /opt/airflow/scripts && '
+    #         'python3 data/silver_transaction.py'
+    #     )
+    # )
+
+    # silver_userlog = DummyOperator(task_id="silver_userlog")
+    # silver_member = DummyOperator(task_id="silver_member")
+
+    # gold_label_store = BashOperator(
+    #     task_id="gold_label_store",
+    #     bash_command=(
+    #         'cd /opt/airflow/scripts && '
+    #         'python3 data/gold_label_store.py'
+    #     )
+    # )
+
+    # gold_feature_store = DummyOperator(task_id="gold_feature_store")
+
+    # label_store_completed = BashOperator(
+    #     task_id="label_store_completed",
+    #     bash_command=(
+    #         'cd /opt/airflow/scripts && '
+    #         'python3 data/label_store_completed.py'
+    #     )
+    # )
+
+    # feature_store_completed = DummyOperator(task_id="feature_store_completed")
+
+# ----------------------------------------------------------------------------------------------------------------------------------
+    # # Define task dependencies to run scripts sequentially
+    # dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_label_store
+    
+    # # Transaction for Feature Store
+    # dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_feature_store
+
+    # # Member for Feature Store
+    # dep_check_source_data >> bronze_member >> silver_member >> gold_feature_store
+
+    # # User Log for Feature Store
+    # dep_check_source_data >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store
+    # dep_check_source_data >> bronze_userlog >> silver_userlog >> gold_feature_store
+
+    # gold_label_store >> label_store_completed
+    # gold_feature_store >> feature_store_completed
+
+
+
     
 
 
 
+
+
+
+
+
+#=========================#=========================#=========================#=========================#=========================#=========================#=========================
 
 
     # # data pipeline

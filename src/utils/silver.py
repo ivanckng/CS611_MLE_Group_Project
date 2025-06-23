@@ -21,11 +21,11 @@ from pyspark.sql.window import Window
 from pyspark.sql.utils import AnalysisException
 
 
-def process_silver_table_member(bucket_name, bronze_member_directory, silver_member_directory, spark):
+def process_silver_table_member(bronze_member_directory, silver_member_directory, spark):
 
     # connect to bronze table
     partition_name = "bronze_members.csv"
-    filepath = f"gs://{bucket_name}/{bronze_member_directory}/{partition_name}"
+    filepath = f"{bronze_member_directory}/{partition_name}"
     df = spark.read.csv(filepath, header=True, inferSchema=True)
     print('loaded from:', filepath, 'row count:', df.count())
 
@@ -60,7 +60,7 @@ def process_silver_table_member(bucket_name, bronze_member_directory, silver_mem
 
     # save silver table - IRL connect to database to write
     partition_name = 'silver_member.parquet'
-    filepath = f"gs://{bucket_name}/{silver_member_directory}/{partition_name}"
+    filepath = f"{silver_member_directory}/{partition_name}"
     try:
         df.write.mode("overwrite").parquet(filepath)
         print('saved to:', filepath)
