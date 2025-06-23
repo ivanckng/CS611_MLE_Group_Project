@@ -20,6 +20,10 @@ from pyspark.sql.functions import col, to_date, count, min, max, lit
 from pyspark.sql.types import StringType, IntegerType, FloatType, DateType
 from pyspark.sql.functions import col, sum as spark_sum, when
 
+
+# Add the parent directory (project root) to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 import utils.silver
 
 print('Done Importing!')
