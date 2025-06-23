@@ -107,3 +107,16 @@ def process_bronze_transaction_partition(date_str, bucket_name, bronze_transacti
     except Exception as e:
         print(f'failed to save bronze transaction {date_str}: {e}')
         return None
+
+def process_bronze_transactions_le(bucket_name, src_directory, target_directory):
+    # Ingesting data from Google Cloud Storage
+    csv_gcs_path = f"gs://{bucket_name}/{src_directory}"
+    df = pd.read_csv(csv_gcs_path)
+
+    # Create bronze table and store to Google Cloud Storage
+    bronze_transactions_gcs_path = f"gs://{bucket_name}/{target_directory}"
+    try:
+        df.to_csv(bronze_transactions_gcs_path, index=False)
+        print("bronze_transactions.csv Stored to Bronze Layer Successfully! ✅")
+    except Exception as e:
+        print(f"bronze_transactions.csv Store Failed: {e}")
