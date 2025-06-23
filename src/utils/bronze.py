@@ -75,7 +75,7 @@ def process_bronze_userlog(date_str, bronze_userlog_directory, spark):
         return None
 
 
-def process_bronze_transaction_partition(date_str, bucket_name, bronze_transaction_directory, spark):
+def process_bronze_transaction_partition(date_str, bronze_transaction_directory, spark):
     # prepare arguments
     snapshot_date = datetime.strptime(date_str, "%Y-%m-%d")
 
@@ -86,12 +86,12 @@ def process_bronze_transaction_partition(date_str, bucket_name, bronze_transacti
     end_date = datetime(year, month, last_day)
     
     # connect to source back end - IRL connect to back end source system
-    csv_file_path = f"gs://{bucket_name}/Silver Layer/silver_transactions.csv"
+    csv_file_path = f"data_source/transactions_50k.csv"
 
     # load data - IRL ingest from back end source system
     df = spark.read.csv(csv_file_path, header=True, inferSchema=True)
-    df = df.withColumn('membership_start_date', to_date(col('membership_start_date').cast('string'), 'yyyy-MM-dd'))
-    df = df.filter( (col("membership_start_date") >= lit(snapshot_date)) & (col("membership_start_date") <= lit(end_date)) )
+    df = df.withColumn('membership_expire_date', to_date(col('membership_expire_date').cast('string'), 'yyyyMMdd'))
+    df = df.filter( (col("membership_expire_date") >= lit(snapshot_date)) & (col("membership_expire_date") <= lit(end_date)) )
     row_count = df.count()
     # Filter same as df = df[df['col'] == True]
     print(date_str + 'row count:', row_count)
@@ -99,7 +99,7 @@ def process_bronze_transaction_partition(date_str, bucket_name, bronze_transacti
 
     # save bronze table to datamart - IRL connect to database to write
     partition_name = "bronze_transaction_" + date_str.replace('-','_') + '.csv'
-    filepath = f"gs://{bucket_name}/{bronze_transaction_directory}/{partition_name}"
+    filepath = f"{bronze_transaction_directory}/{partition_name}"
     try:
         df.toPandas().to_csv(filepath, index=False)
         print('saved to:', filepath)
