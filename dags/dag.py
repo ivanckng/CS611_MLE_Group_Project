@@ -74,6 +74,7 @@ with DAG(
     silver_userlog = DummyOperator(task_id="silver_userlog")
 
     ### transaction feature store
+    bronze_transaction = DummyOperator(task_id="bronze_transaction")
     silver_transaction = DummyOperator(task_id="silver_transaction")
 
 
@@ -92,8 +93,8 @@ with DAG(
     dep_check_source_data >> bronze_member >> silver_member >> gold_feature_store >> feature_store_completed
 
     ### transaction
-    dep_check_source_data >> bronze_label_store >> silver_label_store >> silver_transaction >> gold_feature_store >> feature_store_completed
+    dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_feature_store >> feature_store_completed
 
     ### userlog
     dep_check_source_data >> bronze_userlog >> silver_userlog >> gold_feature_store >> feature_store_completed
-    dep_check_source_data >> bronze_label_store >> silver_label_store >> silver_transaction >> silver_userlog >> gold_feature_store >> feature_store_completed
+    dep_check_source_data >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store >> feature_store_completed
