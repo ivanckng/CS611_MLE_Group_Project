@@ -442,6 +442,6 @@ def process_silver_transactions_le(bucket_name, src_directory, target_directory)
     silver_transactions_gcs_path = f"gs://{bucket_name}/{target_directory}"
     try:
         df_result.to_parquet(silver_transactions_gcs_path, index=False)
-        print("silver_transactions.parquet Stored to Silver Layer Successfully! ✅")
+        print("silver_transactions.csv Stored to Silver Layer Successfully! ✅")
     except Exception as e:
-        print(f"silver_transactions.parquet Store Failed: {e}")
+        print(f"silver_transactions.csv Store Failed: {e}")

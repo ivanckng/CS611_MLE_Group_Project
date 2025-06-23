@@ -20,42 +20,19 @@ from pyspark.sql.functions import col, to_date, count, min, max, lit
 from pyspark.sql.types import StringType, IntegerType, FloatType, DateType
 from pyspark.sql.functions import col, sum as spark_sum, when
 
-print('Done Importing!')
 
+print("Checking Label Data Source...")
 
-def dependency_check(path, file_name, spark):
+bucket_name = "cs611_mle"
+src_directory = "Data Source/transactions_50k.csv"
+transactions_gcs_path = f"gs://{bucket_name}/{src_directory}"
 
-    # load data - IRL ingest from back end source system
-    df = spark.read.csv(path+file_name, header=True, inferSchema=True)
-    row_count = df.count()
-    # Filter same as df = df[df['col'] == True]
-    print(f'{file_name} row count:', row_count)
+try:
+    df_transactions = pd.read_csv(transactions_gcs_path)
+    print('\n\n---Label Source Exists---\n\n')
+except FileNotFoundError:
+    print(f"Label Data Source '{transactions_gcs_path}' does not exist. Please check the label data source.")
+    raise SystemExit("Exiting the program due to missing label data source.")
+except Exception as e:
+    print(f"Error reading from GCS: {e}")
 
-
-def main():
-    print('\n\n---starting job---\n\n')
-
-    # Create a Spark session
-    spark = SparkSession \
-        .builder \
-        .config("spark.driver.memory", "4g") \
-        .getOrCreate()
-
-    # Set log level to ERROR to hide warnings
-    spark.sparkContext.setLogLevel("ERROR")
-
-    file_names = ['transactions_50k.csv']
-    file_path = "data_source/"
-
-    for file_name in file_names:
-        print(f'Checking {file_name}...')
-        dependency_check(file_path, file_name, spark)
-        print(f'{file_name} check completed.\n')
-    
-    # end spark session
-    spark.stop()
-
-    print('\n\n---Done Dependency Check---\n\n')
-
-
-main()

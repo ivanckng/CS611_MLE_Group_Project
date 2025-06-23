@@ -98,7 +98,7 @@ def process_gold_label_store(bucket_name, src_directory, target_directory, grace
     # Create gold table and store to Google Cloud Storage
     gold_label_gcs_path = f"gs://{bucket_name}/{target_directory}"
     try:
-        df_labels.to_parquet(gold_label_gcs_path, index=False)
-        print("labels.parquet Stored to Gold Layer Successfully! ✅")
+        df_labels.to_csv(gold_label_gcs_path, index=False)
+        print("labels.csv Stored to Gold Layer Successfully! ✅")
     except Exception as e:
-        print(f"labels.parquet Store Failed: {e}")
+        print(f"labels.csv Store Failed: {e}")
