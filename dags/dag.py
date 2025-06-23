@@ -21,11 +21,19 @@ with DAG(
 ) as dag:
     
     # ============= Data Pipeline =============
+    dep_check_label_source_data = BashOperator(
+        task_id="dep_label_source_check",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/label/dep_label_source_check.py'
+        )
+    )
+    
     dep_check_source_data = BashOperator(
         task_id="dep_check_source_data",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/dep_source_check.py'
+            'python3 data/feature/dep_source_check.py'
         )
     )
 
@@ -33,7 +41,7 @@ with DAG(
         task_id="bronze_transaction",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/bronze_transaction.py'
+            'python3 data/label/label_bronze.py'
         )
     )
 
@@ -41,14 +49,14 @@ with DAG(
         task_id="bronze_userlog",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/bronze_userlog.py'
+            'python3 data/feature/bronze_userlog.py'
         )    
     )
     bronze_member = BashOperator(
         task_id="bronze_member",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/bronze_member.py'
+            'python3 data/feature/bronze_member.py'
         )    
     )
 
@@ -56,7 +64,7 @@ with DAG(
         task_id="silver_transaction",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/silver_transaction.py'
+            'python3 data/label/label_silver.py'
         )
     )
 
@@ -67,7 +75,7 @@ with DAG(
         task_id="gold_label_store",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/gold_label_store.py'
+            'python3 data/label/label_gold.py'
         )
     )
 
@@ -77,23 +85,23 @@ with DAG(
         task_id="label_store_completed",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/label_store_completed.py'
+            'python3 data/label/label_store_completed.py'
         )
     )
 
     feature_store_completed = DummyOperator(task_id="feature_store_completed")
 
     # Define task dependencies to run scripts sequentially
-    dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_label_store
+    dep_check_label_source_data >> bronze_transaction >> silver_transaction >> gold_label_store
     
     # Transaction for Feature Store
-    dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_feature_store
+    dep_check_label_source_data >> bronze_transaction >> silver_transaction >> gold_feature_store
 
     # Member for Feature Store
     dep_check_source_data >> bronze_member >> silver_member >> gold_feature_store
 
     # User Log for Feature Store
-    dep_check_source_data >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store
+    dep_check_label_source_data >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store
     dep_check_source_data >> bronze_userlog >> silver_userlog >> gold_feature_store
 
     gold_label_store >> label_store_completed
