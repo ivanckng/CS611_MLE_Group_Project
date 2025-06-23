@@ -25,34 +25,62 @@ with DAG(
         task_id="dep_check_source_data",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 dep_source_check.py'
+            'python3 data/dep_source_check.py'
         )
     )
 
-    bronze_transaction = DummyOperator(task_id="bronze_transaction")
+    bronze_transaction = BashOperator(
+        task_id="bronze_transaction",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/bronze_transaction.py'
+        )
+    )
+
     bronze_userlog = BashOperator(
         task_id="bronze_userlog",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 bronze_userlog.py'
+            'python3 data/bronze_userlog.py'
         )    
     )
     bronze_member = BashOperator(
         task_id="bronze_member",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 bronze_member.py'
+            'python3 data/bronze_member.py'
         )    
     )
 
-    silver_transaction = DummyOperator(task_id="silver_transaction")
+    silver_transaction = BashOperator(
+        task_id="silver_transaction",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/silver_transaction.py'
+        )
+    )
+
     silver_userlog = DummyOperator(task_id="silver_userlog")
     silver_member = DummyOperator(task_id="silver_member")
 
-    gold_label_store = DummyOperator(task_id="gold_label_store")
+    gold_label_store = BashOperator(
+        task_id="gold_label_store",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/gold_label_store.py'
+        )
+    )
+
     gold_feature_store = DummyOperator(task_id="gold_feature_store")
 
-    label_store_completed = DummyOperator(task_id="label_store_completed")
+    label_store_completed = BashOperator(
+        task_id="label_store_completed",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/label_store_completed.py'
+        )
+    )
+
     feature_store_completed = DummyOperator(task_id="feature_store_completed")
 
     # Define task dependencies to run scripts sequentially
