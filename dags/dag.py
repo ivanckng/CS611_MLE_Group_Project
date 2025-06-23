@@ -21,7 +21,13 @@ with DAG(
 ) as dag:
     
     # ============= Data Pipeline =============
-    dep_check_source_data = DummyOperator(task_id="dep_check_source_data")
+    dep_check_source_data = BashOperator(
+        task_id="dep_check_source_data",
+        bash_command=(
+            'cd /opt/airflow/scripts/data && '
+            'python3 dep_source_check.py '
+        )
+    )
 
     bronze_transaction = DummyOperator(task_id="bronze_transaction")
     bronze_userlog = DummyOperator(task_id="bronze_userlog")
@@ -40,9 +46,15 @@ with DAG(
     # Define task dependencies to run scripts sequentially
     dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_label_store
     
+    # Transaction for Feature Store
     dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_feature_store
-    dep_check_source_data >> bronze_userlog >> silver_userlog >> gold_feature_store
+
+    # Member for Feature Store
     dep_check_source_data >> bronze_member >> silver_member >> gold_feature_store
+
+    # User Log for Feature Store
+    dep_check_source_data >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store
+    dep_check_source_data >> bronze_userlog >> silver_userlog >> gold_feature_store
 
     gold_label_store >> label_store_completed
     gold_feature_store >> feature_store_completed
