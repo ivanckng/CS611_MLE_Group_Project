@@ -83,3 +83,22 @@ def process_gold_featurestore(date_str, bucket_name, actual_silver_transaction_d
     except Exception as e:
         print(f'failed to save gold featurestore: {e}')
         return None
+
+def process_gold_label_store(bucket_name, src_directory, target_directory, grace_period):
+    # Ingesting data from Google Cloud Storage
+    silver_transactions_gcs_path = f"gs://{bucket_name}/{src_directory}"
+    df_transactions = pd.read_parquet(silver_transactions_gcs_path)
+
+    # Generate labels
+    grace_period = 5
+    df_transactions['churn'] = ((df_transactions['days_diff'] > grace_period) | (df_transactions['days_diff'] == "None")).astype(int)
+
+    df_labels = df_transactions[['msno', 'membership_start_date', 'membership_expire_date', 'churn']]
+
+    # Create gold table and store to Google Cloud Storage
+    gold_label_gcs_path = f"gs://{bucket_name}/{target_directory}"
+    try:
+        df_labels.to_parquet(gold_label_gcs_path, index=False)
+        print("labels.parquet Stored to Gold Layer Successfully! ✅")
+    except Exception as e:
+        print(f"labels.parquet Store Failed: {e}")

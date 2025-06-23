@@ -355,4 +355,93 @@ def process_silver_table_userlog(date_str, bucket_name, bronze_userlog_directory
         print(f'failed to save silver member: {e}')
         return None
 
+def process_silver_transactions_le(bucket_name, src_directory, target_directory):
+    # Load data
+    bronze_transactions_gcs_path = f"gs://{bucket_name}/{src_directory}"
+    df_transactions = pd.read_csv(bronze_transactions_gcs_path)
+
+    # Preprocessing
+    df_transactions = df_transactions.drop(columns=['Unnamed: 0'])
+    df_transactions['transaction_date'] = pd.to_datetime(df_transactions['transaction_date'], format='%Y%m%d')
+    df_transactions['membership_expire_date'] = pd.to_datetime(df_transactions['membership_expire_date'], format='%Y%m%d')
     
+    # Add start date column
+    df_transactions['membership_start_date'] = (
+        df_transactions['membership_expire_date'] -
+        pd.to_timedelta(df_transactions['payment_plan_days'], unit='D')
+    )
+    
+    df_transactions = df_transactions.sort_values(by=['msno', 'transaction_date', 'membership_expire_date'])
+
+    # Filter outliers
+    daily_transactions_by_user = df_transactions.groupby(['msno', 'transaction_date', 'is_cancel']).size().reset_index(name='transaction_count')
+    daily_transactions_by_user = daily_transactions_by_user.sort_values(by = 'transaction_count', ascending = False)
+
+    outlier_days = 2
+    outlier_user_list = list(daily_transactions_by_user[daily_transactions_by_user['transaction_count'] > outlier_days]['msno'].unique())
+    filtering = lambda x: True if x not in outlier_user_list else False
+    df_transactions['filtered'] = df_transactions['msno'].apply(filtering)
+
+    df_transactions = df_transactions[df_transactions['filtered'] == True]
+    df_transactions = df_transactions.drop(columns=['filtered'])
+
+    # Filter date
+    start_date = '2015-01-01'
+    end_date = '2017-03-31'
+    df_transactions = df_transactions[df_transactions['membership_start_date'] >= start_date]
+    df_transactions = df_transactions[df_transactions['membership_expire_date'] <= end_date]
+
+    df_transactions = df_transactions.reset_index(drop=True)
+
+    # Add 'next_transaction_date' and 'days_diff' columns
+    result_rows = []
+
+    grouped = df_transactions.groupby('msno', sort=False)
+    for msno, group in grouped:
+        group = group.reset_index(drop=True)
+
+        for i in range(len(group)):
+            row = group.iloc[i]
+
+            start_date = row['membership_start_date']
+            expire_date = row['membership_expire_date']
+            payment_plan_days = row['payment_plan_days']
+
+            if 30 <= payment_plan_days <= 31 and row['is_cancel'] == 0:
+
+                next_transaction_date = None
+                days_diff = None
+                for j in range(i + 1, len(group)):
+                    next_row = group.iloc[j]
+                    if next_row['is_cancel'] == 0:
+                        next_transaction_date = next_row['transaction_date']
+                        days_diff = (next_transaction_date - expire_date).days
+                        break
+
+                result_rows.append({
+                    'msno': row['msno'],
+                    'membership_start_date': start_date,
+                    'membership_expire_date': expire_date,
+                    'next_transaction_date': next_transaction_date,
+                    'days_diff': days_diff,
+                })
+
+    df_result = pd.DataFrame(result_rows)
+
+    df_result.loc[df_result['days_diff'] < 0, 'days_diff'] = 0
+
+    # Check for small gaps between "membership_expire_date" and "2017-03-31", and if "next_transaction_date" is None,
+    # drop these rows because it's still unknown whether there will be a next transaction after this or not.
+    mask_drop = (
+        df_result['next_transaction_date'].isna() &
+        (pd.to_datetime('2017-03-31') - df_result['membership_expire_date']).dt.days.between(0, 5)
+    )
+    df_result = df_result[~mask_drop]
+
+    # Create silver table and store to Google Cloud Storage
+    silver_transactions_gcs_path = f"gs://{bucket_name}/{target_directory}"
+    try:
+        df_result.to_parquet(silver_transactions_gcs_path, index=False)
+        print("silver_transactions.parquet Stored to Silver Layer Successfully! ✅")
+    except Exception as e:
+        print(f"silver_transactions.parquet Store Failed: {e}")
