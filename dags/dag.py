@@ -30,7 +30,13 @@ with DAG(
     )
 
     bronze_transaction = DummyOperator(task_id="bronze_transaction")
-    bronze_userlog = DummyOperator(task_id="bronze_userlog")
+    bronze_userlog = BashOperator(
+        task_id="bronze_userlog",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 bronze_userlog.py'
+        )    
+    )
     bronze_member = BashOperator(
         task_id="bronze_member",
         bash_command=(

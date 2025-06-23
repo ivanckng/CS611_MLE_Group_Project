@@ -39,7 +39,7 @@ def process_bronze_member(bronze_member_directory, spark):
 
 
 
-def process_bronze_userlog(date_str, bucket_name, bronze_userlog_directory, spark):
+def process_bronze_userlog(date_str, bronze_userlog_directory, spark):
     # prepare arguments
     snapshot_date = datetime.strptime(date_str, "%Y-%m-%d")
 
@@ -50,7 +50,9 @@ def process_bronze_userlog(date_str, bucket_name, bronze_userlog_directory, spar
     end_date = datetime(year, month, last_day)
     
     # connect to source back end - IRL connect to back end source system
-    csv_file_path = f"gs://{bucket_name}/Bronze Layer/user_logs_50k.csv"
+    csv_file_path = f"data_source/user_logs_50k.csv"
+
+    print(f'reading data from: {csv_file_path} for date: {date_str}')
 
     # load data - IRL ingest from back end source system
     df = spark.read.csv(csv_file_path, header=True, inferSchema=True)
@@ -63,7 +65,7 @@ def process_bronze_userlog(date_str, bucket_name, bronze_userlog_directory, spar
 
     # save bronze table to datamart - IRL connect to database to write
     partition_name = "bronze_userlog_" + date_str.replace('-','_') + '.csv'
-    filepath = f"gs://{bucket_name}/{bronze_userlog_directory}/{partition_name}"
+    filepath = f"{bronze_userlog_directory}/{partition_name}"
     try:
         df.toPandas().to_csv(filepath, index=False)
         print('saved to:', filepath)
