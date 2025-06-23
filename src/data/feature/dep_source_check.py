@@ -44,7 +44,7 @@ def main():
     # Set log level to ERROR to hide warnings
     spark.sparkContext.setLogLevel("ERROR")
 
-    file_names = ['members_50k.csv', 'user_logs_50k.csv']
+    file_names = ['members_50k.csv', 'user_logs_50k.csv', 'transactions_50k.csv']
     file_path = "data_source/"
 
     for file_name in file_names:
