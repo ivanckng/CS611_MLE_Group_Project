@@ -21,11 +21,19 @@ with DAG(
 ) as dag:
     
     # ============= Data Pipeline =============
+    dep_check_label_source_data = BashOperator(
+        task_id="dep_label_source_check",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/label/dep_label_source_check.py'
+        )
+    )
+    
     dep_check_source_data = BashOperator(
         task_id="dep_check_source_data",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/dep_source_check.py'
+            'python3 data/feature/dep_source_check.py'
         )
     )
     
@@ -56,7 +64,7 @@ with DAG(
         task_id="bronze_userlog",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/bronze_userlog.py'
+            'python3 data/feature/bronze_userlog.py'
         )    
     )
     silver_userlog = DummyOperator(task_id="silver_userlog")

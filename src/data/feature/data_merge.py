@@ -1,6 +1,7 @@
 # after feature engineering and label engineering
 # we need to process the data,like contact the feature data and label data
 # and the data that splited by date should be store in somewhere like GCP bucket or local data folder
+
 '''
 Script for inferencing the deployed model
 '''
@@ -116,49 +117,19 @@ final_pdf['is_cancel'] = final_pdf['is_cancel'].astype('category')
 final_pdf['city'] = final_pdf['city'].astype('category')
 final_pdf['gender'] = final_pdf['gender'].astype('category')
 
-def upload_to_gcs(local_file_path, bucket_name, blob_name):
-    try:
-        client = storage.Client()
-        bucket = client.bucket(bucket_name)
-        blob = bucket.blob(blob_name)
-        
-        blob.upload_from_filename(local_file_path)
-        print(f"Successfully uploaded {local_file_path} to gs://{bucket_name}/{blob_name}")
-    except Exception as e:
-        print(f"Error uploading {local_file_path}: {e}")
+
+oot_output_path='../../datamart/gold/OOT_data/oot_data.parquet'
+train_output_path='../../datamart/gold/train_data/train_data.parquet'
+# Directory where per-expire-date inference parquet files will be saved
+inference_output_dir='../../datamart/gold/inference_data'
 
 
-GCS_BUCKET_NAME = 'cs611_mle'
-GCS_BASE_PATH = 'datamart/gold'
-
-base_dir = './datamart/gold'
-
-oot_output_path = os.path.join(base_dir, 'OOT_data', 'oot_data.parquet')
-train_output_path = os.path.join(base_dir, 'train_data', 'train_data.parquet')
-inference_output_dir = os.path.join(base_dir, 'inference_data')
-os.makedirs(os.path.dirname(oot_output_path), exist_ok=True)
-os.makedirs(os.path.dirname(train_output_path), exist_ok=True)
-os.makedirs(inference_output_dir, exist_ok=True)
-
-### OOT
 OOT_pdf = final_pdf[(final_pdf['membership_start_date'] >= '2016-11-01')&(final_pdf['membership_start_date'] <= '2016-11-30')]
 OOT_pdf.to_parquet(oot_output_path,index=False)
-# Ensure membership_expire_date is datetime
-if not pd.api.types.is_datetime64_any_dtype(OOT_pdf['membership_expire_date']):
-    OOT_pdf['membership_expire_date'] = pd.to_datetime(OOT_pdf['membership_expire_date'])
 
-upload_to_gcs(oot_output_path, GCS_BUCKET_NAME, f'{GCS_BASE_PATH}/OOT_data/OOT_data.parquet')
-
-### Train
 model_pdf = final_pdf[(final_pdf['membership_start_date'] < '2016-11-01')]
 model_pdf.to_parquet(train_output_path,index=False)
-# Ensure membership_expire_date is datetime
-if not pd.api.types.is_datetime64_any_dtype(model_pdf['membership_expire_date']):
-    model_pdf['membership_expire_date'] = pd.to_datetime(model_pdf['membership_expire_date'])
 
-upload_to_gcs(train_output_path, GCS_BUCKET_NAME, f'{GCS_BASE_PATH}/train_data/train_data.parquet')
-
-### Inference
 inference_pdf = final_pdf[(final_pdf['membership_start_date'] > '2016-12-01')]
 
 # Ensure membership_expire_date is datetime
@@ -171,5 +142,3 @@ for expire_date, subset in inference_pdf.groupby(inference_pdf['membership_expir
     file_path = os.path.join(inference_output_dir, f'inference_data_{date_str}.parquet')
     subset.to_parquet(file_path, index=False)
     print(f"Saved {file_path}, shape: {subset.shape}")
-    gcs_blob_name = f'{GCS_BASE_PATH}/inference_data/inference_data_{date_str}.parquet'
-    upload_to_gcs(file_path, GCS_BUCKET_NAME, gcs_blob_name)
