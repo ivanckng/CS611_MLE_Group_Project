@@ -24,7 +24,7 @@ with DAG(
 
     # ~~~~~~~ Tasks Definition ~~~~~~~
     ## ---- data check ----
-    dep_check_label_source_data = BashOperator(
+    dep_label_source_check = BashOperator(
         task_id="dep_label_source_check",
         bash_command=(
             'cd /opt/airflow/scripts && '
@@ -32,19 +32,46 @@ with DAG(
         )
     )
     
-    dep_check_source_data = BashOperator(
-        task_id="dep_check_source_data",
+    dep_feature_source_check = BashOperator(
+        task_id="dep_feature_source_check",
         bash_command=(
             'cd /opt/airflow/scripts && '
-            'python3 data/feature/dep_source_check.py'
+            'python3 data/feature/dep_feature_source_check.py'
         )
     )
     
     ## ---- label store ----
-    bronze_label_store = DummyOperator(task_id="bronze_label_store")
-    silver_label_store = DummyOperator(task_id="silver_label_store")
-    gold_label_store = DummyOperator(task_id="gold_label_store")
-    label_store_completed = DummyOperator(task_id="label_store_completed")
+    bronze_label_store = BashOperator(
+        task_id="bronze_label_store",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/label/bronze_transactions_le.py'
+        )
+    )
+
+    silver_label_store = BashOperator(
+        task_id="silver_label_store",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/label/silver_transactions_le.py'
+        )
+    )
+
+    gold_label_store = BashOperator(
+        task_id="gold_label_store",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/label/gold_transactions_le.py'
+        )
+    )
+
+    label_store_completed = BashOperator(
+        task_id="label_store_completed",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/label/label_store_completed.py'
+        )
+    )
 
     ## ---- feature store ----
     ### member feature store
@@ -87,15 +114,15 @@ with DAG(
 
     # ~~~~~~~ Flow of tasks ~~~~~~~
     # ---- label store ----
-    dep_check_label_source_data >> bronze_label_store >> silver_label_store >> gold_label_store >> label_store_completed
+    dep_label_source_check >> bronze_label_store >> silver_label_store >> gold_label_store >> label_store_completed
 
     # ---- feature store ----
     ### member
-    dep_check_source_data >> bronze_member >> silver_member >> gold_feature_store >> feature_store_completed
+    dep_feature_source_check >> bronze_member >> silver_member >> gold_feature_store >> feature_store_completed
 
     ### transaction
-    dep_check_source_data >> bronze_transaction >> silver_transaction >> gold_feature_store >> feature_store_completed
+    dep_feature_source_check >> bronze_transaction >> silver_transaction >> gold_feature_store >> feature_store_completed
 
     ### userlog
-    dep_check_source_data >> bronze_userlog >> silver_userlog >> gold_feature_store >> feature_store_completed
-    dep_check_source_data >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store >> feature_store_completed
+    dep_feature_source_check >> bronze_userlog >> silver_userlog >> gold_feature_store >> feature_store_completed
+    dep_feature_source_check >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store >> feature_store_completed
