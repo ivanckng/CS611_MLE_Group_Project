@@ -24,14 +24,20 @@ with DAG(
     dep_check_source_data = BashOperator(
         task_id="dep_check_source_data",
         bash_command=(
-            'cd /opt/airflow/scripts/data && '
-            'python3 dep_source_check.py '
+            'cd /opt/airflow/scripts && '
+            'python3 dep_source_check.py'
         )
     )
 
     bronze_transaction = DummyOperator(task_id="bronze_transaction")
     bronze_userlog = DummyOperator(task_id="bronze_userlog")
-    bronze_member = DummyOperator(task_id="bronze_member")
+    bronze_member = BashOperator(
+        task_id="bronze_member",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 bronze_member.py'
+        )    
+    )
 
     silver_transaction = DummyOperator(task_id="silver_transaction")
     silver_userlog = DummyOperator(task_id="silver_userlog")

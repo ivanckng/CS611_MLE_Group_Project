@@ -23,13 +23,8 @@ from pyspark.sql.functions import col, sum as spark_sum, when
 print('Done Importing!')
 
 
-spark = SparkSession \
-    .builder \
-    .config("spark.driver.memory", "4g") \
-    .getOrCreate()
+def dependency_check(path, file_name, spark):
 
-
-def dependency_check(path, file_name):
     # load data - IRL ingest from back end source system
     df = spark.read.csv(path+file_name, header=True, inferSchema=True)
     row_count = df.count()
@@ -37,11 +32,30 @@ def dependency_check(path, file_name):
     print(f'{file_name} row count:', row_count)
 
 
-file_names = ['members_50k.csv', 'transactions_50k.csv', 'user_logs_50k.csv']
-# connect to source back end - IRL connect to back end source system
-file_path = "../data_source/"
+def main():
+    print('\n\n---starting job---\n\n')
 
-for file_name in file_names:
-    print(f'Checking {file_name}...')
-    dependency_check(file_path, file_name)
-    print(f'{file_name} check completed.\n')
+    # Create a Spark session
+    spark = SparkSession \
+        .builder \
+        .config("spark.driver.memory", "4g") \
+        .getOrCreate()
+
+    # Set log level to ERROR to hide warnings
+    spark.sparkContext.setLogLevel("ERROR")
+
+    file_names = ['members_50k.csv', 'transactions_50k.csv', 'user_logs_50k.csv']
+    file_path = "data_source/"
+
+    for file_name in file_names:
+        print(f'Checking {file_name}...')
+        dependency_check(file_path, file_name, spark)
+        print(f'{file_name} check completed.\n')
+    
+    # end spark session
+    spark.stop()
+
+    print('\n\n---Done Dependency Check---\n\n')
+
+
+main()

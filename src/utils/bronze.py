@@ -16,9 +16,9 @@ from pyspark.sql.functions import col, to_date, count, min, max, lit
 from pyspark.sql.types import StringType, IntegerType, FloatType, DateType
 
 
-def process_bronze_member(bucket_name, bronze_member_directory, spark):
+def process_bronze_member(bronze_member_directory, spark):
     # connect to source back end - IRL connect to back end source system
-    csv_file_path = f"gs://{bucket_name}/Bronze Layer/members_50k.csv"
+    csv_file_path = "data_source/members_50k.csv"
 
     # load data - IRL ingest from back end source system
     df = spark.read.csv(csv_file_path, header=True, inferSchema=True)
@@ -28,7 +28,7 @@ def process_bronze_member(bucket_name, bronze_member_directory, spark):
 
     # save bronze table to datamart - IRL connect to database to write
     partition_name = "bronze_members.csv"
-    filepath = f"gs://{bucket_name}/{bronze_member_directory}/{partition_name}"
+    filepath = f"{bronze_member_directory}/{partition_name}"
     try:
         df.toPandas().to_csv(filepath, index=False)
         print('saved to:', filepath)
