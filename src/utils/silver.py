@@ -63,14 +63,15 @@ def process_silver_table_member(bronze_member_directory, silver_member_directory
     filepath = f"gs://cs611_mle/{silver_member_directory}/{partition_name}"
     try:
         df.write.mode("overwrite").parquet(filepath)
-        print('saved to:', filepath)
+        print('saved to:', filepath, 'row count:', df.count())
+        df.show(5)  # Show the first 5 rows for verification
         return df
     except Exception as e:
         print(f'failed to save silver member: {e}')
         return None
 
 
-def process_silver_table_transaction(date_str, bucket_name, bronze_transaction_directory, finalized_silver_transaction_directory, spark):
+def process_silver_table_transaction(date_str, bronze_transaction_directory, silver_transaction_directory, spark):
     # prepare arguments
     snapshot_date = datetime.strptime(date_str, "%Y-%m-%d")
     
@@ -81,7 +82,45 @@ def process_silver_table_transaction(date_str, bucket_name, bronze_transaction_d
     print('loaded from:', filepath, 'row count:', df.count())
 
     # drop invalid columns
-    df = df.drop('Unnamed: 0.1')
+    df = df.drop('Unnamed: 0')
+    df = df.drop('_c0')
+
+    # ==============================
+    df_transactions = df.toPandas()
+    df_transactions['transaction_date'] = pd.to_datetime(df_transactions['transaction_date'], format='%Y%m%d')
+    df_transactions['membership_expire_date'] = pd.to_datetime(df_transactions['membership_expire_date'], format='%Y-%m-%d')
+
+    
+    # Add start date column
+    df_transactions['membership_start_date'] = (
+        df_transactions['membership_expire_date'] -
+        pd.to_timedelta(df_transactions['payment_plan_days'], unit='D')
+    )
+    
+    df_transactions = df_transactions.sort_values(by=['msno', 'transaction_date', 'membership_expire_date'])
+
+    # Filter outliers
+    daily_transactions_by_user = df_transactions.groupby(['msno', 'transaction_date', 'is_cancel']).size().reset_index(name='transaction_count')
+    daily_transactions_by_user = daily_transactions_by_user.sort_values(by = 'transaction_count', ascending = False)
+
+    outlier_days = 2
+    outlier_user_list = list(daily_transactions_by_user[daily_transactions_by_user['transaction_count'] > outlier_days]['msno'].unique())
+    filtering = lambda x: True if x not in outlier_user_list else False
+    df_transactions['filtered'] = df_transactions['msno'].apply(filtering)
+
+    df_transactions = df_transactions[df_transactions['filtered'] == True]
+    df_transactions = df_transactions.drop(columns=['filtered'])
+
+    # Filter date
+    start_date = '2015-01-01'
+    end_date = '2017-03-31'
+    df_transactions = df_transactions[df_transactions['membership_start_date'] >= start_date]
+    df_transactions = df_transactions[df_transactions['membership_expire_date'] <= end_date]
+
+    df_transactions = df_transactions.reset_index(drop=True)
+    # Convert back to Spark DataFrame
+    df = spark.createDataFrame(df_transactions)
+    # ===============================
 
     
 
@@ -104,9 +143,6 @@ def process_silver_table_transaction(date_str, bucket_name, bronze_transaction_d
     for column, new_type in column_type_map.items():
         df = df.withColumn(column, col(column).cast(new_type))
 
-    # valid_range = list(range(36, 42))
-    # df = ( df .withColumn( "payment_method_id", F.when(F.col("payment_method_id").isin(valid_range), F.col("payment_method_id").cast("string")) .otherwise(F.lit("Others")) ) )
-
 
     df = ( df .withColumn( "discount_ratio", F.when( F.col("plan_list_price") != 0, (F.col("plan_list_price") - F.col("actual_amount_paid")) / F.col("plan_list_price") ).otherwise(F.lit(0)) ) )
 
@@ -114,10 +150,11 @@ def process_silver_table_transaction(date_str, bucket_name, bronze_transaction_d
 
     # save silver table - IRL connect to database to write
     partition_name = "silver_transaction_" + date_str.replace('-','_') + '.parquet'
-    filepath = f"gs://{bucket_name}/{finalized_silver_transaction_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{silver_transaction_directory}/{partition_name}"
     try:
         df.write.mode("overwrite").parquet(filepath)
-        print('saved to:', filepath)
+        print('saved to:', filepath, 'row count:', df.count())
+        df.show(5)  # Show the first 5 rows for verification
         return df
     except Exception as e:
         print(f'failed to save silver member: {e}')

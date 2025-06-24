@@ -110,7 +110,13 @@ with DAG(
             'python3 data/feature/bronze_transaction.py'
         )
     )
-    silver_transaction = DummyOperator(task_id="silver_transaction")
+    silver_transaction = BashOperator(
+        task_id="silver_transaction",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/feature/silver_transaction.py'
+        )    
+    )
 
 
     ### gold feature store
