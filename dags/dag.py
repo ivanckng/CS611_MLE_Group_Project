@@ -126,8 +126,20 @@ with DAG(
 
 
     ### gold feature store
-    gold_feature_store = DummyOperator(task_id="gold_feature_store")
-    feature_store_completed = DummyOperator(task_id="feature_store_completed")
+    gold_feature_store = BashOperator(
+        task_id="gold_feature_store",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/feature/gold_feature_store.py'
+        )
+    )
+    feature_store_completed = BashOperator(
+        task_id="feature_store_completed",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/feature/feature_store_completed.py'
+        )
+    )
 
 
 
