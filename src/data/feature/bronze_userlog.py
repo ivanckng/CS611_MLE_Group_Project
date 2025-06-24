@@ -83,8 +83,6 @@ def main():
 
     # ============ Setup Directories =============
     bronze_userlog_directory = "datamart/bronze/userlog"
-    # if not os.path.exists(bronze_userlog_directory):
-    #     os.makedirs(bronze_userlog_directory)
     print(f'Bronze userlog directory: {bronze_userlog_directory}')
 
     # ============ Process Each Date =============

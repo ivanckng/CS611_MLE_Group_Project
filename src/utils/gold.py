@@ -40,12 +40,7 @@ def process_gold_featurestore(date_str, silver_transaction_directory, silver_use
     df_member = spark.read.parquet(member_parquet_path)
     print('loaded from:', member_parquet_path, 'row count:', df_member.count())
 
-    # df_transaction.show(5)
-    # df_userlog.show(5)
-    # df_member.show(5)
 
-
-    # ==== Your join logic here...
     df_joined = df_transaction.join(
         df_userlog,
         on=['msno', 'membership_start_date', 'membership_expire_date'],
@@ -70,8 +65,6 @@ def process_gold_featurestore(date_str, silver_transaction_directory, silver_use
     df_joined = df_joined.drop('payment_plan_days')
     df_joined = df_joined.drop('registration_init_time')
     df_joined = df_joined.drop('registration_init_time')
-
-    # df_joined.show(5)
 
 
     partition_name = "gold_featurestore_" + date_str.replace('-','_') + '.parquet'
@@ -100,6 +93,6 @@ def process_gold_label_store(bucket_name, src_directory, target_directory, grace
     gold_label_gcs_path = f"gs://{bucket_name}/{target_directory}"
     try:
         df_labels.to_csv(gold_label_gcs_path, index=False)
-        print("labels.csv Stored to Gold Layer Successfully! ✅")
+        print("labels.csv Stored to Gold Layer Successfully! ")
     except Exception as e:
         print(f"labels.csv Store Failed: {e}")

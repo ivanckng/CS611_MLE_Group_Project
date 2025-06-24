@@ -92,7 +92,6 @@ def main():
 
     # end spark session
     spark.stop()
-    
     print('\n\n---Done Build Silver Table - transaction---\n\n')
 
 

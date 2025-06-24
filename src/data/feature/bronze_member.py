@@ -48,9 +48,6 @@ def main():
     spark._jsc.hadoopConfiguration().set('google.cloud.auth.service.account.json.keyfile', "application_default_credentials.json")  
     
     bronze_member_directory = "datamart/bronze/member"
-    # if not os.path.exists(bronze_member_directory):
-    #     os.makedirs(bronze_member_directory)
-
     utils.bronze.process_bronze_member(bronze_member_directory, spark)
 
     # end spark session

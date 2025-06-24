@@ -83,9 +83,6 @@ def main():
 
     # ============ Setup Directories =============
     bronze_transaction_directory = "datamart/bronze/transaction"
-    # if not os.path.exists(bronze_transaction_directory):
-    #     os.makedirs(bronze_transaction_directory)
-    
     for date_str in dates_str_lst:
         utils.bronze.process_bronze_transaction_partition(date_str, bronze_transaction_directory, spark)
 

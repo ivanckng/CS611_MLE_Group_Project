@@ -85,7 +85,6 @@ def process_silver_table_transaction(date_str, bronze_transaction_directory, sil
     df = df.drop('Unnamed: 0')
     df = df.drop('_c0')
 
-    # ==============================
     df_transactions = df.toPandas()
     df_transactions['transaction_date'] = pd.to_datetime(df_transactions['transaction_date'], format='%Y%m%d')
     df_transactions['membership_expire_date'] = pd.to_datetime(df_transactions['membership_expire_date'], format='%Y-%m-%d')
@@ -120,8 +119,7 @@ def process_silver_table_transaction(date_str, bronze_transaction_directory, sil
     df_transactions = df_transactions.reset_index(drop=True)
     # Convert back to Spark DataFrame
     df = spark.createDataFrame(df_transactions)
-    # ===============================
-
+    
     
 
 
@@ -224,9 +222,6 @@ def process_silver_table_userlog(date_str, bronze_userlog_directory, silver_tran
     
     # Get current and previous month (always use 1st of month)
     current_month = snapshot_date.replace(day=1)
-    # previous_month = (snapshot_date - relativedelta(months=1)).replace(day=1)
-
-    # f"gs://{bucket_name}/{bronze_userlog_directory}/{partition_name}"
     
     # Load current Month
     tx_current_partition = "silver_transaction_" + current_month.strftime("%Y_%m_%d") + ".parquet" 
@@ -235,17 +230,8 @@ def process_silver_table_userlog(date_str, bronze_userlog_directory, silver_tran
     print('Loaded transactions from:', tx_current_partition, 'row count:', df_tx_current.count())
 
 
-    # if previous_month >= min_tx_date:
-    #     tx_prev_partition = "silver_transaction_" + previous_month.strftime("%Y_%m_%d") + ".parquet"
-    #     tx_prev_path = f"gs://{bucket_name}/{silver_transaction_directory}/{tx_prev_partition}"
-    #     df_tx_prev = spark.read.parquet(tx_prev_path)
-    #     df_tx = df_tx_current.unionByName(df_tx_prev)
-    #     print('Loaded transactions from:', tx_prev_partition, 'and', tx_current_partition, 'row count:', df_tx.count())
-    # else:
     df_tx = df_tx_current
-    #     print('Loaded transactions only from:', tx_current_partition, 'row count:', df_tx.count())
     
-
     # JOIN logs and transaction
     df_joined = df.join(
         df_tx,

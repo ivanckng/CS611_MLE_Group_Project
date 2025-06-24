@@ -51,8 +51,6 @@ def main():
     
     bronze_member_directory = "datamart/bronze/member"
     silver_member_directory = "datamart/silver/member"
-    # if not os.path.exists(silver_member_directory):
-    #     os.makedirs(silver_member_directory)
 
     utils.silver.process_silver_table_member(bronze_member_directory, silver_member_directory, spark)
 
