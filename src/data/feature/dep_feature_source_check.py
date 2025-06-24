@@ -38,14 +38,20 @@ def main():
     # Create a Spark session
     spark = SparkSession \
         .builder \
+        .config("spark.jars", "jars/gcs-connector-hadoop3-2.2.20-shaded.jar") \
         .config("spark.driver.memory", "4g") \
         .getOrCreate()
 
     # Set log level to ERROR to hide warnings
     spark.sparkContext.setLogLevel("ERROR")
 
+    spark._jsc.hadoopConfiguration().set('fs.gs.impl', 'com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem')
+    spark._jsc.hadoopConfiguration().set('fs.gs.auth.service.account.enable', 'true')
+    spark._jsc.hadoopConfiguration().set('google.cloud.auth.service.account.json.keyfile', "application_default_credentials.json")
+
+
     file_names = ['members_50k.csv', 'user_logs_50k.csv', 'transactions_50k.csv']
-    file_path = "data_source/"
+    file_path = "gs://cs611_mle/Data Source/"
 
     for file_name in file_names:
         print(f'Checking {file_name}...')

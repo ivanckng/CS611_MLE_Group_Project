@@ -57,11 +57,16 @@ def main():
     # ============ Setup Spark Session =============
     spark = SparkSession \
         .builder \
+        .config("spark.jars", "jars/gcs-connector-hadoop3-2.2.20-shaded.jar") \
         .config("spark.driver.memory", "4g") \
         .getOrCreate()
-    
+
     # Set log level to ERROR to hide warnings
-    spark.sparkContext.setLogLevel("ERROR")    
+    spark.sparkContext.setLogLevel("ERROR")
+
+    spark._jsc.hadoopConfiguration().set('fs.gs.impl', 'com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem')
+    spark._jsc.hadoopConfiguration().set('fs.gs.auth.service.account.enable', 'true')
+    spark._jsc.hadoopConfiguration().set('google.cloud.auth.service.account.json.keyfile', "application_default_credentials.json")
 
     # ============ Setup Date Range ============= 
     # Setup Config
@@ -78,8 +83,8 @@ def main():
 
     # ============ Setup Directories =============
     bronze_transaction_directory = "datamart/bronze/transaction"
-    if not os.path.exists(bronze_transaction_directory):
-        os.makedirs(bronze_transaction_directory)
+    # if not os.path.exists(bronze_transaction_directory):
+    #     os.makedirs(bronze_transaction_directory)
     
     for date_str in dates_str_lst:
         utils.bronze.process_bronze_transaction_partition(date_str, bronze_transaction_directory, spark)

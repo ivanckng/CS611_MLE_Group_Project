@@ -18,7 +18,7 @@ from pyspark.sql.types import StringType, IntegerType, FloatType, DateType
 
 def process_bronze_member(bronze_member_directory, spark):
     # connect to source back end - IRL connect to back end source system
-    csv_file_path = "data_source/members_50k.csv"
+    csv_file_path = "gs://cs611_mle/Data Source/members_50k.csv"
 
     # load data - IRL ingest from back end source system
     df = spark.read.csv(csv_file_path, header=True, inferSchema=True)
@@ -28,7 +28,7 @@ def process_bronze_member(bronze_member_directory, spark):
 
     # save bronze table to datamart - IRL connect to database to write
     partition_name = "bronze_members.csv"
-    filepath = f"{bronze_member_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{bronze_member_directory}/{partition_name}"
     try:
         df.toPandas().to_csv(filepath, index=False)
         print('saved to:', filepath)
@@ -50,7 +50,7 @@ def process_bronze_userlog(date_str, bronze_userlog_directory, spark):
     end_date = datetime(year, month, last_day)
     
     # connect to source back end - IRL connect to back end source system
-    csv_file_path = f"data_source/user_logs_50k.csv"
+    csv_file_path = f"gs://cs611_mle/Data Source/user_logs_50k.csv"
 
     print(f'reading data from: {csv_file_path} for date: {date_str}')
 
@@ -65,7 +65,7 @@ def process_bronze_userlog(date_str, bronze_userlog_directory, spark):
 
     # save bronze table to datamart - IRL connect to database to write
     partition_name = "bronze_userlog_" + date_str.replace('-','_') + '.csv'
-    filepath = f"{bronze_userlog_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{bronze_userlog_directory}/{partition_name}"
     try:
         df.toPandas().to_csv(filepath, index=False)
         print('saved to:', filepath)
@@ -86,7 +86,7 @@ def process_bronze_transaction_partition(date_str, bronze_transaction_directory,
     end_date = datetime(year, month, last_day)
     
     # connect to source back end - IRL connect to back end source system
-    csv_file_path = f"data_source/transactions_50k.csv"
+    csv_file_path = f"gs://cs611_mle/Data Source/transactions_50k.csv"
 
     # load data - IRL ingest from back end source system
     df = spark.read.csv(csv_file_path, header=True, inferSchema=True)
@@ -99,7 +99,7 @@ def process_bronze_transaction_partition(date_str, bronze_transaction_directory,
 
     # save bronze table to datamart - IRL connect to database to write
     partition_name = "bronze_transaction_" + date_str.replace('-','_') + '.csv'
-    filepath = f"{bronze_transaction_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{bronze_transaction_directory}/{partition_name}"
     try:
         df.toPandas().to_csv(filepath, index=False)
         print('saved to:', filepath)

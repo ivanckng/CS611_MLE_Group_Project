@@ -21,15 +21,15 @@ from pyspark.sql.window import Window
 from pyspark.sql.utils import AnalysisException
 
 
-def process_gold_featurestore(date_str, bucket_name, actual_silver_transaction_directory, silver_userlog_directory, silver_member_directory, gold_feature_store_directory, spark):
+def process_gold_featurestore(date_str, actual_silver_transaction_directory, silver_userlog_directory, silver_member_directory, gold_feature_store_directory, spark):
     # prepare arguments
     snapshot_date = datetime.strptime(date_str, "%Y-%m-%d")
     
     
     # =========== 修改成你的 GCS 路径 ============
-    transaction_parquet_path = f"gs://{bucket_name}/{actual_silver_transaction_directory}/silver_transaction_{date_str.replace('-','_')}.parquet"
-    userlog_parquet_path = f"gs://{bucket_name}/{silver_userlog_directory}/silver_userlog_{date_str.replace('-','_')}.parquet"
-    member_parquet_path = f"gs://{bucket_name}/{silver_member_directory}/silver_member.parquet"
+    transaction_parquet_path = f"gs://cs611_mle/{actual_silver_transaction_directory}/silver_transaction_{date_str.replace('-','_')}.parquet"
+    userlog_parquet_path = f"gs://cs611_mle/{silver_userlog_directory}/silver_userlog_{date_str.replace('-','_')}.parquet"
+    member_parquet_path = f"gs://cs611_mle/{silver_member_directory}/silver_member.parquet"
     
     
     # ======== 读取 Parquet 文件为 DataFrame ========
@@ -75,7 +75,7 @@ def process_gold_featurestore(date_str, bucket_name, actual_silver_transaction_d
 
 
     partition_name = "gold_featurestore_" + date_str.replace('-','_') + '.parquet'
-    filepath = f"gs://{bucket_name}/{gold_feature_store_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{gold_feature_store_directory}/{partition_name}"
     try:
         df_joined.write.mode("overwrite").parquet(filepath)
         print('saved to:', filepath)

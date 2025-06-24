@@ -25,7 +25,7 @@ def process_silver_table_member(bronze_member_directory, silver_member_directory
 
     # connect to bronze table
     partition_name = "bronze_members.csv"
-    filepath = f"{bronze_member_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{bronze_member_directory}/{partition_name}"
     df = spark.read.csv(filepath, header=True, inferSchema=True)
     print('loaded from:', filepath, 'row count:', df.count())
 
@@ -60,7 +60,7 @@ def process_silver_table_member(bronze_member_directory, silver_member_directory
 
     # save silver table - IRL connect to database to write
     partition_name = 'silver_member.parquet'
-    filepath = f"{silver_member_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{silver_member_directory}/{partition_name}"
     try:
         df.write.mode("overwrite").parquet(filepath)
         print('saved to:', filepath)
@@ -76,7 +76,7 @@ def process_silver_table_transaction(date_str, bucket_name, bronze_transaction_d
     
     # connect to bronze table
     partition_name = "bronze_transaction_" + date_str.replace('-','_') + '.csv'
-    filepath = f"gs://{bucket_name}/{bronze_transaction_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{bronze_transaction_directory}/{partition_name}"
     df = spark.read.csv(filepath, header=True, inferSchema=True)
     print('loaded from:', filepath, 'row count:', df.count())
 
@@ -127,13 +127,13 @@ def process_silver_table_transaction(date_str, bucket_name, bronze_transaction_d
 
 
 
-def process_silver_table_userlog(date_str, bucket_name, bronze_userlog_directory, silver_transaction_directory, silver_userlog_directory, spark):
+def process_silver_table_userlog(date_str, bronze_userlog_directory, silver_transaction_directory, silver_userlog_directory, spark):
     # prepare arguments
     snapshot_date = datetime.strptime(date_str, "%Y-%m-%d")
     
     # Current Month Partition UserLog
     partition_name = "bronze_userlog_" + date_str.replace('-','_') + '.csv'
-    filepath = f"gs://{bucket_name}/{bronze_userlog_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{bronze_userlog_directory}/{partition_name}"
     df = spark.read.csv(filepath, header=True, inferSchema=True)
     print('loaded from:', filepath, 'row count:', df.count())
 
@@ -141,7 +141,7 @@ def process_silver_table_userlog(date_str, bucket_name, bronze_userlog_directory
     next_month_date = snapshot_date + relativedelta(months=1)
     next_date_str = next_month_date.strftime("%Y-%m-%d")
     next_partition_name = "bronze_userlog_" + next_date_str.replace('-','_') + '.csv'
-    next_filepath = f"gs://{bucket_name}/{bronze_userlog_directory}/{next_partition_name}"
+    next_filepath = f"gs://cs611_mle/{bronze_userlog_directory}/{next_partition_name}"
 
     # Try reading the next snapshot, if exists
     try:
@@ -193,7 +193,7 @@ def process_silver_table_userlog(date_str, bucket_name, bronze_userlog_directory
     
     # Load current Month
     tx_current_partition = "silver_transaction_" + current_month.strftime("%Y_%m_%d") + ".parquet" 
-    tx_current_path = f"gs://{bucket_name}/{silver_transaction_directory}/{tx_current_partition}"
+    tx_current_path = f"gs://cs611_mle/{silver_transaction_directory}/{tx_current_partition}"
     df_tx_current = spark.read.parquet(tx_current_path)
 
 
@@ -346,7 +346,7 @@ def process_silver_table_userlog(date_str, bucket_name, bronze_userlog_directory
 
     # save silver table - IRL connect to database to write
     partition_name = "silver_userlog_" + date_str.replace('-','_') + '.parquet'
-    filepath = f"gs://{bucket_name}/{silver_userlog_directory}/{partition_name}"
+    filepath = f"gs://cs611_mle/{silver_userlog_directory}/{partition_name}"
     try:
         agg_df.write.mode("overwrite").parquet(filepath)
         print('saved to:', filepath)
