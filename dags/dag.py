@@ -141,9 +141,25 @@ with DAG(
     )
 
     ## ---- train/AutoML ----
+    model_automl_start = DummyOperator(task_id="model_automl_start")
 
+    model_1_automl = BashOperator(
+    task_id="model_1_automl",
+    bash_command=(
+        'cd /opt/airflow/scripts && '
+        'python3 model/train_lr.py --date {{ ds }}'
+        )
+    )
 
+    model_2_automl = BashOperator(
+    task_id="model_2_automl",
+    bash_command=(
+        'cd /opt/airflow/scripts && '
+        'python3 model/train_rf.py --date {{ ds }}'
+        )
+    )
 
+    model_automl_completed = DummyOperator(task_id="model_automl_completed")
 
 
     ## ---- inference ----
@@ -176,6 +192,11 @@ with DAG(
     ### userlog
     dep_feature_source_check >> bronze_userlog >> silver_userlog >> gold_feature_store >> feature_store_completed
     dep_feature_source_check >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store >> feature_store_completed
+
+    ### train
+    [label_store_completed, feature_store_completed] >> model_automl_start
+    model_automl_start >> [model_1_automl, model_2_automl]
+    [model_1_automl, model_2_automl] >> model_automl_completed
 
     ### inference
     feature_store_completed >> model_inference_start >> model_inference >> model_inference_completed >>model_monitor_start >>model_monitor >> model_monitor_completed
