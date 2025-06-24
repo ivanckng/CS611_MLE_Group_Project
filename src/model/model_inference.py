@@ -45,10 +45,10 @@ try:
 except:
     pass
 DEFAULT_INPUT_PREFIX = os.getenv(
-    "GCS_INFERENCE_PREFIX", "datamart/gold/inference_data"
+    "GCS_INFERENCE_PREFIX", "datamart_1/gold/inference_data"
 )
 DEFAULT_OUTPUT_PREFIX = os.getenv(
-    "GCS_PREDICTION_PREFIX", "datamart/gold/model_predictions"
+    "GCS_PREDICTION_PREFIX", "datamart_1/gold/model_predictions"
 )
 PRED_ENDPOINT = os.getenv("PREDICTION_ENDPOINT", "http://0.0.0.0:8000/predict_batch")
 
@@ -58,6 +58,7 @@ PRED_ENDPOINT = os.getenv("PREDICTION_ENDPOINT", "http://0.0.0.0:8000/predict_ba
 
 def run_inference(date_str: str) -> None:
     """Main entry for running inference for a given date (YYYY-MM-DD)."""
+    print('\n\n---starting job---\n\n')
     date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
     formatted_date = date_obj.strftime("%Y_%m_%d")
 
@@ -88,7 +89,7 @@ def run_inference(date_str: str) -> None:
         "registered_via",
     ]
     inference_numeric = inference_pdf.drop(columns=cate_cols)
-    inference_cate = inference_pdf[cate_cols]
+    inference_cate = inference_pdf[cate_cols].copy()
 
     scaler = StandardScaler()
     transformer_stdscaler = scaler.fit(inference_numeric)
@@ -166,9 +167,10 @@ def run_inference(date_str: str) -> None:
     result_df = pd.DataFrame({"prediction": preds, "churn": daily_target.values})
 
     print(
-        f"Uploading prediction parquet to gs://{bucket_name}/{output_blob_path} (rows: {len(result_df)})..."
+        f"Uploading prediction parquet to {output_blob_path} (rows: {len(result_df)})..."
     )
     result_df.to_parquet(output_blob_path)
+    print('\n\n---completed job---\n\n')
     # upload_file_to_gcs(bucket, output_blob_path)
 
 

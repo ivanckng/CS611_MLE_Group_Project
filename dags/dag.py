@@ -140,6 +140,26 @@ with DAG(
         )
     )
 
+    ## ---- train/AutoML ----
+
+
+
+
+
+    ## ---- inference ----
+    model_inference_start = DummyOperator(task_id="model_inference_start")
+    model_inference = BashOperator(
+        task_id="model_inference",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 model/model_inference.py --date {{ ds }}'
+        )
+    )
+    model_inference_completed = DummyOperator(task_id="model_inference_completed")
+
+    model_monitor_start = DummyOperator(task_id="model_monitor_start")
+    model_monitor=DummyOperator(task_id="model_monitor")
+    model_monitor_completed = DummyOperator(task_id="model_monitor_completed")
 
 
     # ~~~~~~~ Flow of tasks ~~~~~~~
@@ -156,3 +176,6 @@ with DAG(
     ### userlog
     dep_feature_source_check >> bronze_userlog >> silver_userlog >> gold_feature_store >> feature_store_completed
     dep_feature_source_check >> bronze_transaction >> silver_transaction >> silver_userlog >> gold_feature_store >> feature_store_completed
+
+    ### inference
+    feature_store_completed >> model_inference_start >> model_inference >> model_inference_completed >>model_monitor_start >>model_monitor >> model_monitor_completed
