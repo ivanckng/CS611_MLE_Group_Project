@@ -174,19 +174,19 @@ def process_silver_table_userlog(date_str, bronze_userlog_directory, silver_tran
     df = spark.read.csv(filepath, header=True, inferSchema=True)
     print('loaded from:', filepath, 'row count:', df.count())
 
-    # Prepare next-month snapshot
-    next_month_date = snapshot_date + relativedelta(months=1)
-    next_date_str = next_month_date.strftime("%Y-%m-%d")
-    next_partition_name = "bronze_userlog_" + next_date_str.replace('-','_') + '.csv'
-    next_filepath = f"gs://cs611_mle/{bronze_userlog_directory}/{next_partition_name}"
+    # Prepare last-month snapshot
+    last_month_date = snapshot_date - relativedelta(months=1)
+    last_date_str = last_month_date.strftime("%Y-%m-%d")
+    last_partition_name = "bronze_userlog_" + last_date_str.replace('-', '_') + '.csv'
+    last_filepath = f"gs://cs611_mle/{bronze_userlog_directory}/{last_partition_name}"
 
-    # Try reading the next snapshot, if exists
+    # Try reading the last snapshot, if exists
     try:
-        df_next = spark.read.csv(next_filepath, header=True, inferSchema=True)
-        print('Also loaded from:', next_filepath, 'row count:', df_next.count())
-        df = df.unionByName(df_next)
+        df_last = spark.read.csv(last_filepath, header=True, inferSchema=True)
+        print('Also loaded from:', last_filepath, 'row count:', df_last.count())
+        df = df.unionByName(df_last)
     except AnalysisException:
-        print(f"File {next_filepath} does not exist. Proceeding with single snapshot.")
+        print(f"File {last_filepath} does not exist. Proceeding with single snapshot.")
 
 
     # Drop invalid column
@@ -232,6 +232,7 @@ def process_silver_table_userlog(date_str, bronze_userlog_directory, silver_tran
     tx_current_partition = "silver_transaction_" + current_month.strftime("%Y_%m_%d") + ".parquet" 
     tx_current_path = f"gs://cs611_mle/{silver_transaction_directory}/{tx_current_partition}"
     df_tx_current = spark.read.parquet(tx_current_path)
+    print('Loaded transactions from:', tx_current_partition, 'row count:', df_tx_current.count())
 
 
     # if previous_month >= min_tx_date:
@@ -371,9 +372,9 @@ def process_silver_table_userlog(date_str, bronze_userlog_directory, silver_tran
     
 
     # ====================
-    # USER LOG CONTAINS CURRENT MONTH + NEXT MONTH
-    # E.G. Tx membership start date = 15-01-2015, membership end date = 15-02-2015
-    # Need to get userlog between 01-02-2015
+    # USER LOG CONTAINS CURRENT MONTH + LAST MONTH
+    # E.G. Tx membership expire date = 15-02-2015, membership start date = 15-01-2015
+    # Need to get userlog between 01-2025 and 02-2015
 
     # ALSO, if last_first_7_days_total_secs_ratio is 0, most likely:
     # 1. the plan is more than 30/31 days, i could not capture more than 2 months of user logs
@@ -386,7 +387,8 @@ def process_silver_table_userlog(date_str, bronze_userlog_directory, silver_tran
     filepath = f"gs://cs611_mle/{silver_userlog_directory}/{partition_name}"
     try:
         agg_df.write.mode("overwrite").parquet(filepath)
-        print('saved to:', filepath)
+        print('saved to:', filepath, 'row count:', agg_df.count())
+        agg_df.show(5)  # Show the first 5 rows for verification
         return agg_df
     except Exception as e:
         print(f'failed to save silver member: {e}')

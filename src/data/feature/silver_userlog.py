@@ -25,8 +25,8 @@ from pyspark.sql.functions import col, sum as spark_sum, when
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 import utils.silver
-
 print('Done Importing!')
+
 
 
 
@@ -56,7 +56,7 @@ def generate_first_of_month_dates(start_date_str, end_date_str):
 
 
 def main():
-    print('\n\n---starting job ~ Silver transaction---\n\n')
+    print('\n\n---starting job ~ Silver Userlog---\n\n')
 
     # ============ Setup Spark Session =============
     spark = SparkSession \
@@ -72,6 +72,7 @@ def main():
     spark._jsc.hadoopConfiguration().set('fs.gs.auth.service.account.enable', 'true')
     spark._jsc.hadoopConfiguration().set('google.cloud.auth.service.account.json.keyfile', "application_default_credentials.json")
 
+
     # ============ Setup Date Range ============= 
     # Setup Config
     snapshot_date_str = "2015-01-01"
@@ -83,17 +84,21 @@ def main():
     print("Done generate list of dates!")
     print(dates_str_lst)
 
+
     # ============ Setup Directories =============
-    bronze_transaction_directory = "datamart/bronze/transaction"
+    bronze_userlog_directory = "datamart/bronze/userlog"
+    silver_userlog_directory = "datamart/silver/userlog"
     silver_transaction_directory = "datamart/silver/transaction"
-
     for date_str in dates_str_lst:
-        utils.silver.process_silver_table_transaction(date_str, bronze_transaction_directory, silver_transaction_directory, spark)
+        utils.silver.process_silver_table_userlog(date_str, bronze_userlog_directory, silver_transaction_directory, silver_userlog_directory, spark)
 
+    
     # end spark session
     spark.stop()
     
-    print('\n\n---Done Build Silver Table - transaction---\n\n')
+    print('\n\n---Done Build Silver Table - userlog---\n\n')
+
 
 
 main()
+

@@ -99,7 +99,13 @@ with DAG(
     #         'python3 data/feature/bronze_userlog.py'
     #     )    
     # )
-    silver_userlog = DummyOperator(task_id="silver_userlog")
+    silver_userlog = BashOperator(
+        task_id="silver_userlog",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/feature/silver_userlog.py'
+        )
+    )
 
 
     ### transaction feature store
