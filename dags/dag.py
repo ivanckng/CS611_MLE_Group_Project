@@ -91,14 +91,13 @@ with DAG(
     )
 
     ### userlog feature store
-    bronze_userlog = DummyOperator(task_id="bronze_userlog")
-    # bronze_userlog = BashOperator(
-    #     task_id="bronze_userlog",
-    #     bash_command=(
-    #         'cd /opt/airflow/scripts && '
-    #         'python3 data/feature/bronze_userlog.py'
-    #     )    
-    # )
+    bronze_userlog = BashOperator(
+        task_id="bronze_userlog",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 data/feature/bronze_userlog.py'
+        )    
+    )
     silver_userlog = BashOperator(
         task_id="silver_userlog",
         bash_command=(
