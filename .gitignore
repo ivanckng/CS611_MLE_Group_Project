@@ -198,5 +198,7 @@ cython_debug/
 
 # data
 *.csv
-
 *.parquet
+
+application_default_credentials.json
+jars/
