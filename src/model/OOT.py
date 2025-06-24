@@ -23,7 +23,7 @@ x_n = x.drop(columns=cate_cols)
 x_c = x[cate_cols].copy()
 
 # standardization
-scaler_path = "saved_models/lr_scaler.joblib"
+scaler_path = "models/lr_scaler.joblib"
 try:
     scaler = joblib.load(scaler_path)
     print("Scaler Load succesfully")
