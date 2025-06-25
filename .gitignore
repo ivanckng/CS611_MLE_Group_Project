@@ -201,4 +201,3 @@ cython_debug/
 *.parquet
 
 application_default_credentials.json
-jars/
