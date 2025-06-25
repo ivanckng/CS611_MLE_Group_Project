@@ -13,7 +13,7 @@ def run_inference(date_str):
 
     # GCS path
     bucket_name = "cs611_mle"
-    gcs_path = f"gs://{bucket_name}/datamart_old/gold/model_predictions/prediction_{formatted_date}.parquet"
+    gcs_path = f"gs://{bucket_name}/datamart/gold/model_predictions/prediction_{formatted_date}.parquet"
 
     df = pd.read_parquet(gcs_path)
 
