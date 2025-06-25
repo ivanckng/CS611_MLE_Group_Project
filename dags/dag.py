@@ -174,7 +174,13 @@ with DAG(
     model_inference_completed = DummyOperator(task_id="model_inference_completed")
 
     model_monitor_start = DummyOperator(task_id="model_monitor_start")
-    model_monitor=DummyOperator(task_id="model_monitor")
+    model_monitor= BashOperator(
+        task_id="model_monitor",
+        bash_command=(
+            'cd /opt/airflow/scripts && '
+            'python3 model/model_monitor.py --date {{ ds }}'
+        )
+    )
     model_monitor_completed = DummyOperator(task_id="model_monitor_completed")
 
 
