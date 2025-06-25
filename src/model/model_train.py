@@ -26,7 +26,7 @@ from sklearn.model_selection import train_test_split
 ### Load Gold Table
 
 fs = gcsfs.GCSFileSystem()
-gcs_path = 'gs://cs611_mle/datamart_1/gold/train_data/train_data.parquet'
+gcs_path = 'gs://cs611_mle/datamart/gold/train_data/train_data.parquet'
 df = pd.read_parquet(gcs_path, filesystem=fs)
 
 ### Split Data

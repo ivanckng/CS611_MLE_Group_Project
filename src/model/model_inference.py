@@ -45,10 +45,10 @@ try:
 except:
     pass
 DEFAULT_INPUT_PREFIX = os.getenv(
-    "GCS_INFERENCE_PREFIX", "datamart_1/gold/inference_data"
+    "GCS_INFERENCE_PREFIX", "datamart/gold/inference_data"
 )
 DEFAULT_OUTPUT_PREFIX = os.getenv(
-    "GCS_PREDICTION_PREFIX", "datamart_1/gold/model_predictions"
+    "GCS_PREDICTION_PREFIX", "datamart/gold/model_predictions"
 )
 PRED_ENDPOINT = os.getenv("PREDICTION_ENDPOINT", "http://0.0.0.0:8000/predict_batch")
 

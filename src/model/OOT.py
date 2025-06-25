@@ -11,7 +11,7 @@ from sklearn.metrics import roc_curve, auc, fbeta_score, precision_score, recall
 ### Load OOT set
 
 fs = gcsfs.GCSFileSystem()
-gcs_path = 'gs://cs611_mle/datamart_1/gold/OOT_data/OOT_data.parquet'
+gcs_path = 'gs://cs611_mle/datamart/gold/OOT_data/OOT_data.parquet'
 df = pd.read_parquet(gcs_path, filesystem=fs)
 
 y_true = df['churn']
