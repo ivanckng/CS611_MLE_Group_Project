@@ -415,84 +415,51 @@ if not os.path.exists(model_dir):
 
 # save LR model, threshold, and scaler
 if 'lr_best_model_bo' in locals() and lr_best_model_bo is not None:
-   
-   # Save LR model (joblib)
-   lr_joblib_path = f"{model_dir}/lr_best_model_.joblib"
-   joblib.dump(lr_best_model_bo, lr_joblib_path)
-   
-   # Save optimal threshold (joblib)
-   lr_threshold_path = f"{model_dir}/lr_threshold.joblib"
-   joblib.dump(lr_threshold, lr_threshold_path)
-   
-   # Save scaler (joblib)
-   if 'scaler' in locals() and scaler is not None:
-       lr_scaler_path = f"{model_dir}/lr_scaler.joblib"
-       joblib.dump(scaler, lr_scaler_path)
-   else:
-       lr_scaler_path = "Scaler not found"
-       print("Warning: Scaler not found in locals()")
-   
-   # Save model info (joblib)
-   lr_info = {
-       'model_type': 'LogisticRegression',
-       'best_params': lr_best_params_bo,
-       'cv_score': lr_best_score_bo,
-       'test_auc': test_auc, 
-       'test_f1_5': test_f1_5, 
-       'test_fn_rate': test_fn_rate, 
-       'threshold': lr_threshold,
-       'sample_size': len(x_train),
-       'feature_count': x_train.shape[1] if hasattr(x_train, 'shape') else 'unknown',
-       'feature_names': list(x_train.columns) if hasattr(x_train, 'columns') else 'unknown'
-   }
-   
-   lr_info_path = f"{model_dir}/lr_model_info.joblib"
-   joblib.dump(lr_info, lr_info_path)
-   
-   print(f"LogisticRegression model and components saved")
-   
-else:
-   print("LogisticRegression model not found or optimization failed")
-print()
 
-### RF
-# save RF model, threshold, and scaler
+    joblib.dump(lr_best_model_bo, f"{model_dir}/lr_best_model.joblib")
+    joblib.dump(lr_threshold, f"{model_dir}/lr_threshold.joblib")
+    joblib.dump(scaler, f"{model_dir}/lr_scaler.joblib")
+
+    lr_info = {
+        'model_type': 'LogisticRegression',
+        'best_params': lr_best_params_bo,
+        'cv_score': lr_best_score_bo,
+        'test_auc': lr_test_auc,
+        'test_f1_5': lr_test_f1_5,
+        'test_fn_rate': lr_test_fn_rate,
+        'threshold': lr_threshold,
+        'sample_size': len(x_train),
+        'feature_count': x_train.shape[1],
+        'feature_names': list(x_train.columns)
+    }
+
+    joblib.dump(lr_info, f"{model_dir}/lr_model_info.joblib")
+    print("LogisticRegression model and metadata saved")
+
+else:
+    print("LogisticRegression model not found or optimization failed")
+
 if 'rf_best_model_optuna' in locals() and rf_best_model_optuna is not None:
-   
-   # Save RF model (joblib)
-   rf_joblib_path = f"{model_dir}/rf_best_model.joblib"
-   joblib.dump(rf_best_model_optuna, rf_joblib_path)
-   
-   # Save optimal threshold (joblib)
-   rf_threshold_path = f"{model_dir}/rf_threshold.joblib"
-   joblib.dump(rf_threshold, rf_threshold_path)
-   
-   # Save scaler (joblib)
-   if 'scaler' in locals() and scaler is not None:
-       rf_scaler_path = f"{model_dir}/rf_scaler.joblib"
-       joblib.dump(scaler, rf_scaler_path)
-   else:
-       rf_scaler_path = "Scaler not found"
-       print("Warning: Scaler not found in locals()")
-   
-   # Save model info (joblib)
-   rf_info = {
-       'model_type': 'RandomForest',
-       'best_params': rf_best_params_optuna,
-       'cv_score': rf_best_score_optuna,
-       'test_auc': test_auc,    
-       'test_f1_5': test_f1_5,
-       'test_fn_rate': test_fn_rate, 
-       'threshold': rf_threshold,
-       'sample_size': len(x_train),
-       'feature_count': x_train.shape[1] if hasattr(x_train, 'shape') else 'unknown',
-       'feature_names': list(x_train.columns) if hasattr(x_train, 'columns') else 'unknown'
-   }
-   
-   rf_info_path = f"{model_dir}/rf_model_info.joblib"
-   joblib.dump(rf_info, rf_info_path)
-   
-   print(f"RandomForest model and components saved")
+
+    joblib.dump(rf_best_model_optuna, f"{model_dir}/rf_best_model.joblib")
+    joblib.dump(rf_threshold, f"{model_dir}/rf_threshold.joblib")
+    joblib.dump(scaler, f"{model_dir}/rf_scaler.joblib")
+
+    rf_info = {
+        'model_type': 'RandomForest',
+        'best_params': rf_best_params_optuna,
+        'cv_score': rf_best_score_optuna,
+        'test_auc': rf_test_auc,
+        'test_f1_5': rf_test_f1_5,
+        'test_fn_rate': rf_test_fn_rate,
+        'threshold': rf_threshold,
+        'sample_size': len(x_train),
+        'feature_count': x_train.shape[1],
+        'feature_names': list(x_train.columns)
+    }
+
+    joblib.dump(rf_info, f"{model_dir}/rf_model_info.joblib")
+    print("RandomForest model and metadata saved")
 
 else:
-   print("RandomForest model not found or optimization failed")
+    print("RandomForest model not found or optimization failed")
