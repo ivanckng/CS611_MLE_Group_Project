@@ -26,7 +26,7 @@ from sklearn.model_selection import train_test_split
 ### Load Gold Table
 
 fs = gcsfs.GCSFileSystem()
-gcs_path = 'gs://cs611_mle/datamart/gold/train_data/train_data.parquet'
+gcs_path = 'gs://cs611_mle/datamart_old/gold/train_data/train_data.parquet'
 df = pd.read_parquet(gcs_path, filesystem=fs)
 
 ### Split Data
@@ -409,57 +409,156 @@ print(f"FN/(FN+TN): {test_fn_rate:.4f}")
 import joblib
 
 # save model path
-model_dir = "models"
+model_dir = "/home/haomeng.yi.leah/CS611_MLE_Group_Project/CS611_MLE_Group_Project/models"
 if not os.path.exists(model_dir):
    os.makedirs(model_dir)
 
 # save LR model, threshold, and scaler
 if 'lr_best_model_bo' in locals() and lr_best_model_bo is not None:
-
-    joblib.dump(lr_best_model_bo, f"{model_dir}/lr_best_model.joblib")
-    joblib.dump(lr_threshold, f"{model_dir}/lr_threshold.joblib")
-    joblib.dump(scaler, f"{model_dir}/lr_scaler.joblib")
-
-    lr_info = {
-        'model_type': 'LogisticRegression',
-        'best_params': lr_best_params_bo,
-        'cv_score': lr_best_score_bo,
-        'test_auc': lr_test_auc,
-        'test_f1_5': lr_test_f1_5,
-        'test_fn_rate': lr_test_fn_rate,
-        'threshold': lr_threshold,
-        'sample_size': len(x_train),
-        'feature_count': x_train.shape[1],
-        'feature_names': list(x_train.columns)
-    }
-
-    joblib.dump(lr_info, f"{model_dir}/lr_model_info.joblib")
-    print("LogisticRegression model and metadata saved")
-
+   
+   # Save LR model (joblib)
+   lr_joblib_path = f"{model_dir}/lr_best_model_.joblib"
+   joblib.dump(lr_best_model_bo, lr_joblib_path)
+   
+   # Save optimal threshold (joblib)
+   lr_threshold_path = f"{model_dir}/lr_threshold.joblib"
+   joblib.dump(lr_threshold, lr_threshold_path)
+   
+   # Save scaler (joblib)
+   if 'scaler' in locals() and scaler is not None:
+       lr_scaler_path = f"{model_dir}/lr_scaler.joblib"
+       joblib.dump(scaler, lr_scaler_path)
+   else:
+       lr_scaler_path = "Scaler not found"
+       print("Warning: Scaler not found in locals()")
+   
+   # Save model info (joblib)
+   lr_info = {
+       'model_type': 'LogisticRegression',
+       'best_params': lr_best_params_bo,
+       'cv_score': lr_best_score_bo,
+       'test_auc': test_auc, 
+       'test_f1_5': test_f1_5, 
+       'test_fn_rate': test_fn_rate, 
+       'threshold': lr_threshold,
+       'sample_size': len(x_train),
+       'feature_count': x_train.shape[1] if hasattr(x_train, 'shape') else 'unknown',
+       'feature_names': list(x_train.columns) if hasattr(x_train, 'columns') else 'unknown'
+   }
+   
+   lr_info_path = f"{model_dir}/lr_model_info.joblib"
+   joblib.dump(lr_info, lr_info_path)
+   
+   print(f"LogisticRegression model and components saved")
+   
 else:
-    print("LogisticRegression model not found or optimization failed")
+   print("LogisticRegression model not found or optimization failed")
+print()
 
+### RF
+# save RF model, threshold, and scaler
 if 'rf_best_model_optuna' in locals() and rf_best_model_optuna is not None:
-
-    joblib.dump(rf_best_model_optuna, f"{model_dir}/rf_best_model.joblib")
-    joblib.dump(rf_threshold, f"{model_dir}/rf_threshold.joblib")
-    joblib.dump(scaler, f"{model_dir}/rf_scaler.joblib")
-
-    rf_info = {
-        'model_type': 'RandomForest',
-        'best_params': rf_best_params_optuna,
-        'cv_score': rf_best_score_optuna,
-        'test_auc': rf_test_auc,
-        'test_f1_5': rf_test_f1_5,
-        'test_fn_rate': rf_test_fn_rate,
-        'threshold': rf_threshold,
-        'sample_size': len(x_train),
-        'feature_count': x_train.shape[1],
-        'feature_names': list(x_train.columns)
-    }
-
-    joblib.dump(rf_info, f"{model_dir}/rf_model_info.joblib")
-    print("RandomForest model and metadata saved")
+   
+   # Save RF model (joblib)
+   rf_joblib_path = f"{model_dir}/rf_best_model.joblib"
+   joblib.dump(rf_best_model_optuna, rf_joblib_path)
+   
+   # Save optimal threshold (joblib)
+   rf_threshold_path = f"{model_dir}/rf_threshold.joblib"
+   joblib.dump(rf_threshold, rf_threshold_path)
+   
+   # Save scaler (joblib)
+   if 'scaler' in locals() and scaler is not None:
+       rf_scaler_path = f"{model_dir}/rf_scaler.joblib"
+       joblib.dump(scaler, rf_scaler_path)
+   else:
+       rf_scaler_path = "Scaler not found"
+       print("Warning: Scaler not found in locals()")
+   
+   # Save model info (joblib)
+   rf_info = {
+       'model_type': 'RandomForest',
+       'best_params': rf_best_params_optuna,
+       'cv_score': rf_best_score_optuna,
+       'test_auc': test_auc,    
+       'test_f1_5': test_f1_5,
+       'test_fn_rate': test_fn_rate, 
+       'threshold': rf_threshold,
+       'sample_size': len(x_train),
+       'feature_count': x_train.shape[1] if hasattr(x_train, 'shape') else 'unknown',
+       'feature_names': list(x_train.columns) if hasattr(x_train, 'columns') else 'unknown'
+   }
+   
+   rf_info_path = f"{model_dir}/rf_model_info.joblib"
+   joblib.dump(rf_info, rf_info_path)
+   
+   print(f"RandomForest model and components saved")
 
 else:
-    print("RandomForest model not found or optimization failed")
+   print("RandomForest model not found or optimization failed")
+
+
+
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
+
+def save_combined_roc_plot(y_train_lr, y_train_rf, 
+                            y_test_lr, y_test_rf,
+                            lr_train_score, rf_train_score,
+                            lr_test_score, rf_test_score,
+                            output_dir="./roc_figures"):
+    
+    os.makedirs(output_dir, exist_ok=True)
+
+    # ==== TRAIN ROC ====
+    fpr_lr_train, tpr_lr_train, _ = roc_curve(y_train_lr, lr_train_score)
+    fpr_rf_train, tpr_rf_train, _ = roc_curve(y_train_rf, rf_train_score)
+    auc_lr_train = auc(fpr_lr_train, tpr_lr_train)
+    auc_rf_train = auc(fpr_rf_train, tpr_rf_train)
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr_lr_train, tpr_lr_train, label=f"Logistic Regression (AUC = {auc_lr_train:.4f})", linestyle='--')
+    plt.plot(fpr_rf_train, tpr_rf_train, label=f"Random Forest (AUC = {auc_rf_train:.4f})", linestyle='-')
+    plt.plot([0, 1], [0, 1], 'k--', alpha=0.3)
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("ROC Curve - Train Set")
+    plt.legend(loc="lower right")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/roc_train_combined.png")
+    plt.close()
+    print("✅ Saved: roc_train_combined.png")
+
+    # ==== TEST ROC ====
+    fpr_lr_test, tpr_lr_test, _ = roc_curve(y_test_lr, lr_test_score)
+    fpr_rf_test, tpr_rf_test, _ = roc_curve(y_test_rf, rf_test_score)
+    auc_lr_test = auc(fpr_lr_test, tpr_lr_test)
+    auc_rf_test = auc(fpr_rf_test, tpr_rf_test)
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr_lr_test, tpr_lr_test, label=f"Logistic Regression (AUC = {auc_lr_test:.4f})", linestyle='--')
+    plt.plot(fpr_rf_test, tpr_rf_test, label=f"Random Forest (AUC = {auc_rf_test:.4f})", linestyle='-')
+    plt.plot([0, 1], [0, 1], 'k--', alpha=0.3)
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("ROC Curve - Test Set")
+    plt.legend(loc="lower right")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/roc_test_combined.png")
+    plt.close()
+    print("✅ Saved: roc_test_combined.png")
+
+# === 调用函数 ===
+save_combined_roc_plot(
+    y_train_lr=y_train_lr,
+    y_train_rf=y_train,
+    y_test_lr=y_test,
+    y_test_rf=y_test,
+    lr_train_score=lr_train_pred,
+    rf_train_score=rf_train_pred,
+    lr_test_score=lr_test_pred,
+    rf_test_score=rf_test_pred,
+    output_dir="./roc_figures"
+)
