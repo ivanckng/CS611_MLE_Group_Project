@@ -18,3 +18,4 @@ apache-airflow[celery,postgres,redis]
 psycopg2-binary
 flower
 pyarrow
+optuna
